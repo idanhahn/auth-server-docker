@@ -12,7 +12,14 @@ router.post('/login', userController.login)
 router.post('/signup', userController.signup);
 
 // get user by email
-router.get('/:email', userController.get_user);
+router.get('/userProfile/:email' ,userController.get_user)
+
+
+
+// TODO: add admin functions
+//router.get('/:email', userController.get_user);
+
+
 
 module.exports = router
 

@@ -2,6 +2,8 @@ var User = require('../models/user.model')
 const bcrypt = require('bcryptjs');
 var passport = require('passport');
 var LocalStrategy = require('passport-local');
+var jwt = require('jsonwebtoken')
+
 
 exports.get_user = async (req, res) => {
     console.log(req.params.email)
@@ -56,7 +58,14 @@ exports.login = async (req, res) => {
             res.status(404).json(info)
         } else {
             // auth success
-            res.status(200).json(user)
+
+            // Generate JWT and add to headers
+            var token = jwt.sign({username: user.email},
+                process.env.JWT_SECRET, {
+                expiresIn: process.env.JWT_EXPIRATION
+            })
+
+            res.status(200).json({token: token})
         }
 
     }) (req, res);
