@@ -12,7 +12,7 @@ router.post('/login', userController.login)
 router.post('/signup', userController.signup);
 
 // get user by email
-router.get('/userProfile/:email' ,userController.get_user)
+router.get('/userProfile/:email' , passport.authenticate('jwt', {session: false}), userController.get_user);
 
 
 

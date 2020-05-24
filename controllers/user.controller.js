@@ -2,18 +2,28 @@ var User = require('../models/user.model')
 const bcrypt = require('bcryptjs');
 var passport = require('passport');
 var LocalStrategy = require('passport-local');
+var JwtStrategy = require('passport-jwt').Strategy;
+var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken')
 
 
 exports.get_user = async (req, res) => {
     console.log(req.params.email)
     try{
-        const user = await User.findAll({
+        const db_query = await User.findAll({
             where: {
                 email: req.params.email
             }
-        });
+        })
+
+        const user = {
+            firstName: db_query[0].firstName,
+            lastName: db_query[0].lastName,
+            email: db_query[0].email,
+            role: db_query[0].role
+        }
         res.status(200).json(user)
+
     } catch (err) {
         console.log("error on get_user " + err)
         res.status(500).json(err)
@@ -73,7 +83,25 @@ exports.login = async (req, res) => {
 }
 
 
-// Helper functions for passport auth 'local'
+// Helper functions for passport auth
+
+// jwt Strategy
+
+var options = {};
+options.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
+options.secretOrKey = process.env.JWT_SECRET;
+options.username =
+
+passport.use(
+    new JwtStrategy(options, (jwt_payload, done) => {
+        console.log("In jwt strategy: " + JSON.stringify(jwt_payload));
+
+        return done(null, {})
+
+    })
+)
+
+// 'local' Strategy
 
 passport.use(
     new LocalStrategy ( {usernameField: 'email'}, async (username, password, done) => {
