@@ -11,7 +11,8 @@ const User = sequelize.define('user', {
     },
     email: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     password: {
         type: Sequelize.CHAR(60),
@@ -48,7 +49,6 @@ User.beforeCreate( async (user) => {
     user.saltSecret = data.saltSecret;
 
 })
-
 
 User.sync().then(() => {
     console.log("Done syncing database")

@@ -35,7 +35,6 @@ exports.signup = async (req, res) => {
 
     // TODO: need to check if user already exist, etc'
 
-
     console.log(User)
     const newUser = {
         firstName: req.body.firstName,
@@ -46,13 +45,38 @@ exports.signup = async (req, res) => {
     }
 
     try {
-        const data = await User.create(newUser)
-        res.status(200).json(data)
+        const user = await User.create(newUser)
+
+        var response = {
+            user: {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                role: user.role
+            },
+            token: generate_jwt(user.email)
+        }
+
+        res.status(200).json(response)
     } catch (err) {
-        console.log("error on create user " + err)
-        res.status(500).json(err)
+        console.log("error on create user " + JSON.stringify(err));
+        if (err.name == "SequelizeUniqueConstraintError"){
+            // email unique error
+            var response = {
+                user: {
+                    firstName: req.body.firstName,
+                    lastName: req.body.lastName,
+                    email: req.body.email,
+                },
+                errorMsg: "Email already exist in the system"
+            };
+            res.status(422).json(response)
+        } else {
+            res.status(500).json(err)
+        }
     }
 }
+
 
 exports.login = async (req, res) => {
     // get user if exists and check if password match
@@ -68,14 +92,7 @@ exports.login = async (req, res) => {
             res.status(404).json(info)
         } else {
             // auth success
-
-            // Generate JWT and add to headers
-            var token = jwt.sign({username: user.email},
-                process.env.JWT_SECRET, {
-                expiresIn: process.env.JWT_EXPIRATION
-            })
-
-            res.status(200).json({token: token})
+            res.status(200).json({token: generate_jwt(user.email)})
         }
 
     }) (req, res);
@@ -83,7 +100,17 @@ exports.login = async (req, res) => {
 }
 
 
-// Helper functions for passport auth
+// Helper functions
+
+// generate jwt token:
+var generate_jwt = username => {
+
+    return jwt.sign({username: username},
+        process.env.JWT_SECRET, {
+            expiresIn: process.env.JWT_EXPIRATION
+        });
+}
+
 
 // jwt Strategy
 
@@ -136,7 +163,7 @@ passport.use(
                 if (!res) {
 
                     console.log("Password doesn't match");
-                    return done(null, false, {message: "Password doesn't match"});
+                    return done(null, false, {message: "Wrong password"});
 
                 } else {
 
@@ -149,4 +176,6 @@ passport.use(
         } )
 
     })
-)
+);
+
+
